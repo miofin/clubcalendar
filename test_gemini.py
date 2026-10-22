@@ -2,7 +2,10 @@ from google import genai
 import os
 import json
 
+
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+
+
 
 email_subject = "First Meeting 10/1!!!"
 
@@ -54,7 +57,7 @@ EMAIL BODY:
 """
 
 interaction = client.interactions.create(
-    model="gemini-3.8-flash",
+    model="gemini-3.6-flash",
     input=prompt
 )
 
