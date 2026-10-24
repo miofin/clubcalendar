@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Club Meetings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef1f4;
+    --surface: #ffffff;
+    --ink: #17212b;
+    --muted: #5d6b79;
+    --line: #d5dbe1;
+    --accent: #0b6e5f;
+    --accent-ink: #ffffff;
+    --live: #c2410c;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #11181f;
+      --surface: #19232d;
+      --ink: #e8edf2;
+      --muted: #93a1af;
+      --line: #2b3945;
+      --accent: #3fc1ab;
+      --accent-ink: #08201b;
+      --live: #fb923c;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 5rem; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 .4rem; font-weight: 700; }
+  .sub { color: var(--muted); margin: 0 0 1.75rem; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; margin-bottom: 2rem;
+    position: sticky; top: 0; background: var(--bg); padding: .75rem 0; z-index: 2; border-bottom: 1px solid var(--line); }
+  .controls input[type="search"] {
+    flex: 1 1 200px; min-width: 0; font: inherit; color: var(--ink); background: var(--surface);
+    border: 1px solid var(--line); border-radius: 8px; padding: .55rem .8rem;
+  }
+  .controls label { display: flex; align-items: center; gap: .45rem; color: var(--muted); font-size: .95rem; cursor: pointer; }
+  input:focus-visible, button:focus-visible, .pick:focus-within { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+  .day { display: grid; grid-template-columns: 4.5rem 1fr; gap: 1rem; padding: 1.1rem 0; border-top: 1px solid var(--line); }
+  .date { text-align: left; }
+  .date .num { font-size: 2.4rem; font-weight: 700; line-height: 1; letter-spacing: -0.04em; }
+  .date .mon { font-weight: 600; color: var(--muted); }
+  .date .rel { display: block; font-size: .8rem; color: var(--accent); font-weight: 600; margin-top: .2rem; }
+  .day.is-past .num, .day.is-past .mon { color: var(--muted); }
+
+  .list { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; align-content: start; min-width: 0; }
+  .meeting { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 8px; padding: .7rem .95rem; display: flex; flex-wrap: wrap; justify-content: space-between; gap: .15rem 1rem; }
+  .meeting .name { font-weight: 600; }
+  .meeting .time { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .meeting .subject { flex: 1 0 100%; overflow-wrap: anywhere; }
+  .meeting.past { opacity: .6; border-left-color: var(--line); }
+  .meeting.live { border-left-color: var(--live); }
+  .live-tag { color: var(--live); font-weight: 700; font-size: .85rem; }
+
+  .empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 1.5rem; color: var(--muted); }
+  .empty strong { color: var(--ink); display: block; margin-bottom: .25rem; }
+  .pick { display: inline-block; margin-top: .75rem; background: var(--accent); color: var(--accent-ink);
+    font-weight: 600; padding: .55rem .9rem; border-radius: 8px; cursor: pointer; }
+  .pick input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .drop-active { outline: 3px dashed var(--accent); outline-offset: 6px; }
+</style>
+</head>
+<body>
+<main class="wrap" id="app">
+  <h1>Club meetings</h1>
+  <p class="sub" id="summary">Loading meetings…</p>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search by club or subject" aria-label="Search by club or subject">
+    <label><input type="checkbox" id="past"> Show past meetings</label>
+  </div>
+
+  <div id="results" aria-live="polite"></div>
+</main>
+
+<script>
+(function () {
+  var MEETINGS_URL = "meetings.json"; // path to your generated file
+  var all = [];
+  var $ = function (id) { return document.getElementById(id); };
+
+  var isNone = function (v) { return v == null || String(v).trim().toLowerCase() === "none" || String(v).trim() === ""; };
+
+  function parse(raw) {
+    var out = [];
+    (Array.isArray(raw) ? raw : []).forEach(function (m) {
+      if (!m || isNone(m.club_name) || isNone(m.date) || isNone(m.start_time)) return;
+      var d = String(m.date).split("-").map(Number);
+      var s = String(m.start_time).split(":").map(Number); // handles "16:0" as well as "16:00"
+      if (d.length !== 3 || s.length < 2 || d.some(isNaN) || s.some(isNaN)) return;
+      var start = new Date(d[0], d[1] - 1, d[2], s[0], s[1]);
+      var end = null;
+      if (!isNone(m.end_time)) {
+        var e = String(m.end_time).split(":").map(Number);
+        if (e.length >= 2 && !e.some(isNaN)) end = new Date(d[0], d[1] - 1, d[2], e[0], e[1]);
+      }
+      if (isNaN(start)) return;
+      out.push({
+        name: String(m.club_name),
+        subject: isNone(m.subject) ? "" : String(m.subject).replace(/\s+/g, " ").trim(),
+        start: start,
+        end: end || start
+      });
+    });
+    out.sort(function (a, b) { return a.start - b.start || a.name.localeCompare(b.name); });
+    return out;
+  }
+
+  var fmtTime = function (d) {
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  };
+  var dayKey = function (d) { return d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate(); };
+
+  function relLabel(d) {
+    var t = new Date(); t.setHours(0, 0, 0, 0);
+    var x = new Date(d); x.setHours(0, 0, 0, 0);
+    var diff = Math.round((x - t) / 864e5);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Tomorrow";
+    return d.toLocaleDateString([], { weekday: "long" });
+  }
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+
+  function render() {
+    var now = new Date();
+    var term = $("q").value.trim().toLowerCase();
+    var showPast = $("past").checked;
+    var box = $("results");
+    box.textContent = "";
+
+    var shown = all.filter(function (m) {
+      if (term && (m.name + " " + m.subject).toLowerCase().indexOf(term) === -1) return false;
+      if (!showPast && m.end < now) return false;
+      return true;
+    });
+
+    var upcoming = all.filter(function (m) { return m.end >= now; }).length;
+    $("summary").textContent = all.length
+      ? upcoming + " upcoming · " + (all.length - upcoming) + " past"
+      : "No meetings found yet.";
+
+    if (!shown.length) {
+      var e = el("div", "empty");
+      e.appendChild(el("strong", null, all.length ? "No meetings match." : "No meetings to show."));
+      e.appendChild(document.createTextNode(
+        all.length ? "Clear the search or turn on past meetings to see more." : "Check that meetings.json has entries with a club, date, and start time."));
+      box.appendChild(e);
+      return;
+    }
+
+    var groups = [], last = null;
+    shown.forEach(function (m) {
+      var k = dayKey(m.start);
+      if (k !== last) { groups.push({ date: m.start, items: [] }); last = k; }
+      groups[groups.length - 1].items.push(m);
+    });
+
+    groups.forEach(function (g) {
+      var endOfDay = new Date(g.date); endOfDay.setHours(23, 59, 59, 999);
+      var day = el("section", "day" + (endOfDay < now ? " is-past" : ""));
+      var dt = el("div", "date");
+      dt.appendChild(el("div", "num", String(g.date.getDate())));
+      dt.appendChild(el("div", "mon", g.date.toLocaleDateString([], { month: "short", year: "numeric" })));
+      dt.appendChild(el("span", "rel", relLabel(g.date)));
+      day.appendChild(dt);
+
+      var ul = el("ul", "list");
+      g.items.forEach(function (m) {
+        var past = m.end < now, live = m.start <= now && now <= m.end && m.end > m.start;
+        var li = el("li", "meeting" + (past ? " past" : "") + (live ? " live" : ""));
+        li.appendChild(el("span", "name", m.name));
+        var t = el("span", "time", m.end > m.start ? fmtTime(m.start) + " – " + fmtTime(m.end) : fmtTime(m.start));
+        if (live) { var tag = el("span", "live-tag", "Happening now  "); t.insertBefore(tag, t.firstChild); }
+        li.appendChild(t);
+        if (m.subject) li.appendChild(el("span", "subject", m.subject));
+        ul.appendChild(li);
+      });
+      day.appendChild(ul);
+      box.appendChild(day);
+    });
+  }
+
+  function load(raw) { all = parse(raw); render(); }
+
+  function showLoadError() {
+    $("summary").textContent = "Couldn't load meetings.json automatically.";
+    var box = $("results");
+    box.textContent = "";
+    var e = el("div", "empty");
+    e.appendChild(el("strong", null, "Open the file yourself"));
+    e.appendChild(document.createTextNode(
+      "Browsers block local pages from reading files next to them. Serve this folder (for example, python -m http.server), or choose meetings.json here."));
+    e.appendChild(document.createElement("br"));
+    var lab = el("label", "pick", "Choose meetings.json");
+    var inp = document.createElement("input");
+    inp.type = "file"; inp.accept = ".json,application/json";
+    inp.addEventListener("change", function () { if (inp.files[0]) readFile(inp.files[0]); });
+    lab.appendChild(inp);
+    e.appendChild(lab);
+    box.appendChild(e);
+  }
+
+  function readFile(f) {
+    var r = new FileReader();
+    r.onload = function () {
+      try { load(JSON.parse(r.result)); }
+      catch (err) { $("summary").textContent = "That file isn't valid JSON."; }
+    };
+    r.readAsText(f);
+  }
+
+  $("q").addEventListener("input", render);
+  $("past").addEventListener("change", render);
+  window.addEventListener("dragover", function (e) { e.preventDefault(); document.body.classList.add("drop-active"); });
+  window.addEventListener("dragleave", function () { document.body.classList.remove("drop-active"); });
+  window.addEventListener("drop", function (e) {
+    e.preventDefault(); document.body.classList.remove("drop-active");
+    if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+  });
+  setInterval(function () { if (all.length) render(); }, 60000); // keep "now" and past/upcoming fresh
+
+  fetch(MEETINGS_URL, { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(load)
+    .catch(showLoadError);
+})();
+</script>
+</body>
+</html>
