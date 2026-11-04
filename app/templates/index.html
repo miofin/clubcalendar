@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Club Meetings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<main class="wrap" id="app">
+  <form method="post" action="/logout" style="float:right">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit">Sign out</button>
+  </form>
+  <p class="sub">Signed in as {{ email }}</p>
+  <h1>Club meetings</h1>
+  <p class="sub" id="summary">Loading meetings…</p>
+
+  <div class="controls">
+    <input type="search" id="q" placeholder="Search by club or subject" aria-label="Search by club or subject">
+    <label><input type="checkbox" id="past"> Show past meetings</label>
+  </div>
+
+  <div id="results" aria-live="polite"></div>
+</main>
+
+<script src="{{ url_for('static', filename='js/calendar.js') }}" defer></script>
+</body>
+</html>
