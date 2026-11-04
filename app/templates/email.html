@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ meeting.get('subject') or 'Meeting email' }} · Club Meetings</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<main class="wrap">
+  <a class="back-link" href="{{ url_for('index') }}">← Back to calendar</a>
+  <h1>{{ meeting.get('club_name') or 'Meeting email' }}</h1>
+  <p class="sub email-subject">{{ meeting.get('subject') or 'No subject' }}</p>
+  {% if email_document %}
+  <iframe class="email-frame" title="Original meeting email" sandbox="" referrerpolicy="no-referrer" srcdoc="{{ email_document }}"></iframe>
+  {% else %}
+  <p class="empty">Email content isn’t available.</p>
+  {% endif %}
+</main>
+</body>
+</html>

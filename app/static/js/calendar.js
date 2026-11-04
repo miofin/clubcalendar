@@ -7,7 +7,7 @@
 
   function parse(raw) {
     var out = [];
-    (Array.isArray(raw) ? raw : []).forEach(function (m) {
+    (Array.isArray(raw) ? raw : []).forEach(function (m, index) {
       if (!m || isNone(m.club_name) || isNone(m.date) || isNone(m.start_time)) return;
       var d = String(m.date).split("-").map(Number);
       var s = String(m.start_time).split(":").map(Number); // handles "16:0" as well as "16:00"
@@ -20,6 +20,7 @@
       }
       if (isNaN(start)) return;
       out.push({
+        id: index,
         name: String(m.club_name),
         subject: isNone(m.subject) ? "" : String(m.subject).replace(/\s+/g, " ").trim(),
         start: start,
@@ -97,12 +98,15 @@
       var ul = el("ul", "list");
       g.items.forEach(function (m) {
         var past = m.end < now, live = m.start <= now && now <= m.end && m.end > m.start;
-        var li = el("li", "meeting" + (past ? " past" : "") + (live ? " live" : ""));
-        li.appendChild(el("span", "name", m.name));
+        var li = el("li");
+        var card = el("a", "meeting" + (past ? " past" : "") + (live ? " live" : ""));
+        card.href = "/meetings/" + m.id;
+        card.appendChild(el("span", "name", m.name));
         var t = el("span", "time", m.end > m.start ? fmtTime(m.start) + " – " + fmtTime(m.end) : fmtTime(m.start));
         if (live) { var tag = el("span", "live-tag", "Happening now  "); t.insertBefore(tag, t.firstChild); }
-        li.appendChild(t);
-        if (m.subject) li.appendChild(el("span", "subject", m.subject));
+        card.appendChild(t);
+        if (m.subject) card.appendChild(el("span", "subject", m.subject));
+        li.appendChild(card);
         ul.appendChild(li);
       });
       day.appendChild(ul);

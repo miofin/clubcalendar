@@ -31,7 +31,7 @@ def register_auth(app):
 
     @app.before_request
     def protect():
-        if request.endpoint in ('index', 'meetings'):
+        if request.endpoint in ('index', 'meetings', 'meeting_email'):
             if not permitted(session.get('user', {})):
                 # Keep pending OAuth state intact if another tab opens the calendar.
                 session.pop('user', None)
