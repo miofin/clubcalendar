@@ -6,11 +6,14 @@
   <title>{{ meeting.get('subject') or 'Meeting email' }} · Club Meetings</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-<main class="wrap">
+<body class="email-page">
+<main class="email-reader">
+  <nav class="email-toolbar" aria-label="Email navigation">
   <a class="back-link" href="{{ url_for('index') }}">← Back to calendar</a>
-  <h1>{{ meeting.get('club_name') or 'Meeting email' }}</h1>
-  <p class="sub email-subject">{{ meeting.get('subject') or 'No subject' }}</p>
+  </nav>
+  <header class="email-header">
+    <h1 class="email-subject">{{ meeting.get('subject') or 'No subject' }}</h1>
+  </header>
   {% if email_document %}
   <iframe class="email-frame" title="Original meeting email" sandbox="allow-popups allow-popups-to-escape-sandbox" referrerpolicy="no-referrer" srcdoc="{{ email_document }}"></iframe>
   {% else %}

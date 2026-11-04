@@ -36,7 +36,11 @@ def register_routes(app):
                 '<meta http-equiv="Content-Security-Policy" content="'
                 "default-src 'none'; style-src 'unsafe-inline'; img-src data: https: http:; "
                 "base-uri 'none'; form-action 'none'"
-                '"><meta name="referrer" content="no-referrer"></head><body>'
+                '"><meta name="referrer" content="no-referrer">'
+                '<meta name="viewport" content="width=device-width, initial-scale=1">'
+                '<style>html{color-scheme:light}body{margin:0;padding:0;'
+                'font:14px/1.5 Arial,sans-serif;color:#202124;background:#fff}'
+                'img{max-width:100%;height:auto}</style></head><body>'
                 + links_in_new_tabs(content) + '</body></html>'
             )
         return render_template('email.html', meeting=meeting, email_document=email_document)
