@@ -1,0 +1,25 @@
+# Secrets and private inbox data
+.env
+.env.*
+!.env.example
+credentials.yaml
+client_secret*.json
+emails.json
+new_emails.json
+meetings.json
+
+# Python environments and generated files
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local files and logs
+.DS_Store
+*.log
+
+# Existing local exclusion
+/not_code
