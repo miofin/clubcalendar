@@ -20,7 +20,7 @@ def main():
     meetings_file = PROJECT_DIR / "meetings.json"
     if not meetings_file.is_file():
         raise FileNotFoundError(f"Expected file was not created: {meetings_file}")
-
+    '''
     # 3. Stage only meetings.json.
     run_command(["git", "add", "--", "meetings.json"])
 
@@ -48,6 +48,7 @@ def main():
     run_command(["git", "push"])
 
     print("Meeting schedule successfully pushed to GitHub.", flush=True)
+    '''
 
 if __name__ == "__main__":
     main()

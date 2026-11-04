@@ -81,6 +81,11 @@
 </head>
 <body>
 <main class="wrap" id="app">
+  <form method="post" action="/logout" style="float:right">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit">Sign out</button>
+  </form>
+  <p class="sub">Signed in as {{ email }}</p>
   <h1>Club meetings</h1>
   <p class="sub" id="summary">Loading meetings…</p>
 
@@ -208,21 +213,7 @@
   function load(raw) { all = parse(raw); render(); }
 
   function showLoadError() {
-    $("summary").textContent = "Couldn't load meetings.json automatically.";
-    var box = $("results");
-    box.textContent = "";
-    var e = el("div", "empty");
-    e.appendChild(el("strong", null, "Open the file yourself"));
-    e.appendChild(document.createTextNode(
-      "Browsers block local pages from reading files next to them. Serve this folder (for example, python -m http.server), or choose meetings.json here."));
-    e.appendChild(document.createElement("br"));
-    var lab = el("label", "pick", "Choose meetings.json");
-    var inp = document.createElement("input");
-    inp.type = "file"; inp.accept = ".json,application/json";
-    inp.addEventListener("change", function () { if (inp.files[0]) readFile(inp.files[0]); });
-    lab.appendChild(inp);
-    e.appendChild(lab);
-    box.appendChild(e);
+    $("summary").textContent = "Could not load meetings. Please refresh and try again.";
   }
 
   function readFile(f) {
@@ -245,7 +236,7 @@
   setInterval(function () { if (all.length) render(); }, 60000); // keep "now" and past/upcoming fresh
 
   fetch(MEETINGS_URL, { cache: "no-store" })
-    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (r) { if (r.status === 401) { window.location.replace("/login"); throw new Error("Sign in required"); } if (!r.ok) throw new Error(r.status); return r.json(); })
     .then(load)
     .catch(showLoadError);
 })();
