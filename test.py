@@ -1,0 +1,5 @@
+from find_date import find_first_date
+from find_time import find_first_time
+
+
+print(find_first_time("Hey everyone! Join Princeton UNICEF tomorrow at 3:00 PM in Lewis Thomas Lab 117 for our second general meeting! We\u2019ll be decorating signs and painting mini-pumpkins for the town of Princeton\u2019s annual Halloween parade and Trunk or Treat. No need to stay the whole time - feel free to drop in, paint a pumpkin, and learn more about our plans for the Trunk of Treat on the 30th! We would love to see you all there :) Sincerely, Princeton UNICEF This email was instantly sent to all college listservs with Hoagie Mail . Email composed by Hyewon Suh (hyewon.suh@princeton.edu) \u2014 if you believe this email is offensive, intentionally misleading or harmful, please report it to hoagie@princeton.edu ."))
