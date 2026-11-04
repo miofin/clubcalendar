@@ -42,18 +42,18 @@ class EmailPageTests(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.location, '/login')
 
-    def test_html_is_isolated_and_remote_resources_blocked(self):
+    def test_html_is_isolated_and_remote_images_allowed(self):
         self.sign_in()
         response = self.client.get('/meetings/0')
         self.assertEqual(response.status_code, 200)
         html = response.get_data(as_text=True)
         elements = Elements(html)
         iframe = next(attrs for tag, attrs in elements.tags if tag == 'iframe')
-        self.assertEqual(iframe['sandbox'], '')
+        self.assertEqual(iframe['sandbox'], 'allow-popups allow-popups-to-escape-sandbox')
         self.assertEqual(iframe['referrerpolicy'], 'no-referrer')
         self.assertIn(self.markup, iframe['srcdoc'])
         self.assertIn("default-src 'none'", iframe['srcdoc'])
-        self.assertIn('img-src data:', iframe['srcdoc'])
+        self.assertIn('img-src data: https: http:', iframe['srcdoc'])
         self.assertLess(iframe['srcdoc'].index('Content-Security-Policy'), iframe['srcdoc'].index(self.markup))
         self.assertNotIn('script', [tag for tag, attrs in elements.tags])
         self.assertIn('&lt;b&gt;Club&lt;/b&gt;', html)
@@ -65,3 +65,20 @@ class EmailPageTests(unittest.TestCase):
         self.assertIn('Email content isn’t available.', response.get_data(as_text=True))
         for path in ('/meetings/2', '/meetings/-1', '/meetings/not-a-number'):
             self.assertEqual(self.client.get(path).status_code, 404)
+
+
+class EmailLinkTests(unittest.TestCase):
+    def test_links_use_new_tabs_and_preserve_other_markup(self):
+        from app.email_html import links_in_new_tabs
+        markup = ('<p>Hello &amp; welcome</p>\n<a href="https://example.com/?a=1&amp;b=2" '
+                  'target="_self">Link</a><a href="https://example.org" target="_top">Other</a>'
+                  '<area href="https://example.net"/><img src="https://example.com/image.png">')
+        result = links_in_new_tabs(markup)
+        links = [attrs for tag, attrs in Elements(result).tags if tag in ('a', 'area')]
+        self.assertEqual(len(links), 3)
+        for link in links:
+            self.assertEqual(link['target'], '_blank')
+            self.assertEqual(link['rel'], 'noopener noreferrer')
+        self.assertEqual(links[0]['href'], 'https://example.com/?a=1&b=2')
+        self.assertIn('<p>Hello &amp; welcome</p>', result)
+        self.assertIn('<img src="https://example.com/image.png">', result)

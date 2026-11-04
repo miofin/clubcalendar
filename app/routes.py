@@ -4,6 +4,8 @@ from pathlib import Path
 
 from flask import abort, render_template, send_file, session
 
+from .email_html import links_in_new_tabs
+
 
 def register_routes(app):
     @app.get('/')
@@ -32,9 +34,9 @@ def register_routes(app):
             email_document = (
                 '<!doctype html><html><head><meta charset="utf-8">'
                 '<meta http-equiv="Content-Security-Policy" content="'
-                "default-src 'none'; style-src 'unsafe-inline'; img-src data:; "
+                "default-src 'none'; style-src 'unsafe-inline'; img-src data: https: http:; "
                 "base-uri 'none'; form-action 'none'"
                 '"><meta name="referrer" content="no-referrer"></head><body>'
-                + content + '</body></html>'
+                + links_in_new_tabs(content) + '</body></html>'
             )
         return render_template('email.html', meeting=meeting, email_document=email_document)
