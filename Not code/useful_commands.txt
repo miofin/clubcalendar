@@ -1,9 +1,0 @@
-git config user.name "ptown1"
-git config user.email "347249116+ptown1@users.noreply.github.com"
-git checkout --orphan fresh-branch
-git reset
-git add meetings.json index.html
-git commit -m "initial commit"
-git branch -D main
-git branch -m main
-git push --force --set-upstream origin main
