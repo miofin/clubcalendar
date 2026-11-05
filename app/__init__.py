@@ -23,7 +23,7 @@ def create_app(config=None):
         ALLOWED_DOMAIN=os.environ.get('ALLOWED_DOMAIN', '').lower(),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
-        PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
+        PERMANENT_SESSION_LIFETIME=timedelta(hours=24*30),
     )
     if config:
         app.config.update(config)

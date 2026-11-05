@@ -1,9 +1,6 @@
 import json
 from pathlib import Path
 
-from find_date import find_first_date
-from find_time import find_first_time
-
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 #file can be run both on its own and as a package module
