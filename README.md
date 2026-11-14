@@ -1,5 +1,9 @@
 # Club Calendar
 
+This is a time-saving tool to keep track of emails in a Princeton students'
+inbox. clubcalendar reads through the emails, parses them for club meetings, and
+displays them on a searchable calendar with intuitive UI.
+
 The Flask server requires Google sign-in for the calendar and `meetings.json`.
 Email fetching/parsing stays a separate job using your existing inbox credentials.
 Visitors sign in to view the shared calendar; their inboxes are not accessed.
