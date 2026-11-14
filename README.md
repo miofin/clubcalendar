@@ -1,6 +1,6 @@
 # Club Calendar
 
-This is a time-saving tool to keep track of emails in a Princeton students'
+This is a time-saving tool to keep track of emails in a Princeton student's
 inbox. clubcalendar reads through the emails, parses them for club meetings, and
 displays them on a searchable calendar with intuitive UI.
 
